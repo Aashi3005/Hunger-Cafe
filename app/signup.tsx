@@ -1,7 +1,7 @@
 import { Link, router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { signUpUser } from '../services/authService';
+import { getCurrentUser, signUpUser } from '../services/authService';
 
 export default function SignupScreen() {
     const [name, setName] = useState('');
@@ -9,6 +9,18 @@ export default function SignupScreen() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        checkAuthStatus();
+    }, []);
+
+    const checkAuthStatus = async () => {
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+            // User is already logged in, redirect to recipe generator
+            router.replace('/recipe-generator');
+        }
+    };
 
     const handleSignup = async () => {
         if (!name || !email || !password || !confirmPassword) {
@@ -32,7 +44,7 @@ export default function SignupScreen() {
 
         if (result.success) {
             Alert.alert('Success', 'Account created successfully!', [
-                { text: 'OK', onPress: () => router.push('/') }
+                { text: 'OK', onPress: () => router.replace('/recipe-generator') }
             ]);
         } else {
             Alert.alert('Signup Failed', result.error);

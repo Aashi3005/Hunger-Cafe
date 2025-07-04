@@ -1,12 +1,24 @@
-import { Link } from 'expo-router';
-import { useState } from 'react';
+import { Link, router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { signInUser } from '../services/authService';
+import { getCurrentUser, signInUser } from '../services/authService';
 
 export default function AuthScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        checkAuthStatus();
+    }, []);
+
+    const checkAuthStatus = async () => {
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+            // User is already logged in, redirect to recipe generator
+            router.replace('/recipe-generator');
+        }
+    };
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -19,9 +31,8 @@ export default function AuthScreen() {
         setLoading(false);
 
         if (result.success) {
-            Alert.alert('Success', 'Login successful!');
-            // Navigate to home screen after successful login
-            // You can add navigation here
+            // Navigate to recipe generator screen after successful login
+            router.replace('/recipe-generator');
         } else {
             Alert.alert('Login Failed', result.error);
         }
