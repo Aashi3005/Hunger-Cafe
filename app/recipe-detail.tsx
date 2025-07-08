@@ -1,14 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
+import { RecipeStorage, type Recipe } from '../services/recipeStorage';
 
 export default function RecipeDetailScreen() {
   const params = useLocalSearchParams();
@@ -19,7 +20,33 @@ export default function RecipeDetailScreen() {
   // Parse the recipe data from params
   const recipeData = params.recipe ? JSON.parse(params.recipe as string) : null;
 
-  if (!recipeData) {
+  // Add unique ID to recipe if it doesn't have one
+  const recipe: Recipe = recipeData ? {
+    ...recipeData,
+    id: recipeData.id || `recipe_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  } : null;
+
+  // Load initial like/bookmark state from AsyncStorage
+  useEffect(() => {
+    const loadInitialState = async () => {
+      if (recipe) {
+        try {
+          const [isLikedState, isBookmarkedState] = await Promise.all([
+            RecipeStorage.isRecipeLiked(recipe.id),
+            RecipeStorage.isRecipeBookmarked(recipe.id)
+          ]);
+          setIsLiked(isLikedState);
+          setIsBookmarked(isBookmarkedState);
+        } catch (error) {
+          console.error('Error loading initial state:', error);
+        }
+      }
+    };
+
+    loadInitialState();
+  }, [recipe?.id]);
+
+  if (!recipe) {
     return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.errorText}>Recipe not found</Text>
@@ -31,16 +58,40 @@ export default function RecipeDetailScreen() {
     router.back();
   };
 
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    Alert.alert(
-      isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks',
-      isBookmarked ? 'Recipe removed from your bookmarks' : 'Recipe saved to your bookmarks'
-    );
+  const handleBookmark = async () => {
+    try {
+      const newBookmarkedState = !isBookmarked;
+      setIsBookmarked(newBookmarkedState);
+      
+      if (newBookmarkedState) {
+        await RecipeStorage.addBookmarkedRecipe(recipe);
+        Alert.alert('Added to bookmarks', 'Recipe saved to your bookmarks');
+      } else {
+        await RecipeStorage.removeBookmarkedRecipe(recipe.id);
+        Alert.alert('Removed from bookmarks', 'Recipe removed from your bookmarks');
+      }
+    } catch (error) {
+      console.error('Error updating bookmark:', error);
+      setIsBookmarked(!isBookmarked); // Revert state on error
+      Alert.alert('Error', 'Failed to update bookmark');
+    }
   };
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
+  const handleLike = async () => {
+    try {
+      const newLikedState = !isLiked;
+      setIsLiked(newLikedState);
+      
+      if (newLikedState) {
+        await RecipeStorage.addLikedRecipe(recipe);
+      } else {
+        await RecipeStorage.removeLikedRecipe(recipe.id);
+      }
+    } catch (error) {
+      console.error('Error updating like:', error);
+      setIsLiked(!isLiked); // Revert state on error
+      Alert.alert('Error', 'Failed to update like');
+    }
   };
 
   const handleShare = () => {
@@ -57,7 +108,7 @@ export default function RecipeDetailScreen() {
         return (
           <View style={styles.tabContent}>
             <Text style={styles.sectionTitle}>Ingredients</Text>
-            {recipeData.ingredients.map((ingredient: any, index: number) => (
+            {recipe.ingredients.map((ingredient: any, index: number) => (
               <View key={index} style={styles.ingredientItem}>
                 <View style={styles.ingredientBullet} />
                 <Text style={styles.ingredientText}>
@@ -74,8 +125,8 @@ export default function RecipeDetailScreen() {
         return (
           <View style={styles.tabContent}>
             <Text style={styles.sectionTitle}>Instructions</Text>
-            <Text style={styles.stepsCounter}>0/{recipeData.instructions.length} steps</Text>
-            {recipeData.instructions.mp((step: any, index: number) => (
+            <Text style={styles.stepsCounter}>0/{recipe.instructions.length} steps</Text>
+            {recipe.instructions.map((step: any, index: number) => (
               <View key={index} style={styles.stepItem}>
                 <View style={styles.stepHeader}>
                   <View style={styles.stepNumber}>
@@ -94,8 +145,8 @@ export default function RecipeDetailScreen() {
         return (
           <View style={styles.tabContent}>
             <Text style={styles.sectionTitle}>Nutrition Facts</Text>
-            <Text style={styles.nutritionSubtitle}>Per serving ({recipeData.servings} servings total)</Text>
-            {Object.entries(recipeData.nutrition).map(([key, value]: [string, any]) => (
+            <Text style={styles.nutritionSubtitle}>Per serving ({recipe.servings} servings total)</Text>
+            {Object.entries(recipe.nutrition).map(([key, value]: [string, any]) => (
               <View key={key} style={styles.nutritionItem}>
                 <Text style={styles.nutritionLabel}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
                 <Text style={styles.nutritionValue}>{value}</Text>
@@ -108,7 +159,7 @@ export default function RecipeDetailScreen() {
         return (
           <View style={styles.tabContent}>
             <Text style={styles.sectionTitle}>Cooking Tips</Text>
-            {recipeData.tips.map((tip: string, index: number) => (
+            {recipe.tips.map((tip: string, index: number) => (
               <View key={index} style={styles.tipItem}>
                 <Text style={styles.tipIcon}>💡</Text>
                 <Text style={styles.tipText}>{tip}</Text>
@@ -131,7 +182,11 @@ export default function RecipeDetailScreen() {
             <Text style={styles.headerButtonText}>←</Text>
           </TouchableOpacity>
           <View style={styles.headerActions}>
-            <TouchableOpacity onPress={handleLike} style={styles.headerButton}>
+            <TouchableOpacity 
+              onPress={handleLike} 
+              onLongPress={() => router.push('/liked-recipes')}
+              style={styles.headerButton}
+            >
               <Text style={[styles.headerButtonText, isLiked && styles.likedButton]}>
                 {isLiked ? '❤️' : '♡'}
               </Text>
@@ -139,7 +194,11 @@ export default function RecipeDetailScreen() {
             <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
               <Text style={styles.headerButtonText}>↗</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleBookmark} style={styles.headerButton}>
+            <TouchableOpacity 
+              onPress={handleBookmark} 
+              onLongPress={() => router.push('/bookmarked-recipes')}
+              style={styles.headerButton}
+            >
               <Text style={[styles.headerButtonText, isBookmarked && styles.bookmarkedButton]}>
                 {isBookmarked ? '🔖' : '📑'}
               </Text>
@@ -155,7 +214,7 @@ export default function RecipeDetailScreen() {
           
           {/* Tags */}
           <View style={styles.tagsContainer}>
-            {recipeData.tags.map((tag: string, index: number) => (
+            {recipe.tags.map((tag: string, index: number) => (
               <View key={index} style={styles.tag}>
                 <Text style={styles.tagText}>{tag.toUpperCase()}</Text>
               </View>
@@ -164,10 +223,10 @@ export default function RecipeDetailScreen() {
 
           {/* Recipe Title and Rating */}
           <View style={styles.recipeInfo}>
-            <Text style={styles.recipeTitle}>{recipeData.title}</Text>
+            <Text style={styles.recipeTitle}>{recipe.title}</Text>
             <View style={styles.ratingContainer}>
-              <Text style={styles.ratingText}>⭐ {recipeData.rating}</Text>
-              <Text style={styles.ratingCount}>({recipeData.ratingCount})</Text>
+              <Text style={styles.ratingText}>⭐ {recipe.rating}</Text>
+              <Text style={styles.ratingCount}>({recipe.ratingCount})</Text>
             </View>
           </View>
         </View>
@@ -177,22 +236,22 @@ export default function RecipeDetailScreen() {
           <View style={styles.statItem}>
             <Text style={styles.statIcon}>🕒</Text>
             <Text style={styles.statLabel}>Total Time</Text>
-            <Text style={styles.statValue}>{recipeData.totalTime}</Text>
+            <Text style={styles.statValue}>{recipe.totalTime}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statIcon}>👥</Text>
             <Text style={styles.statLabel}>Servings</Text>
-            <Text style={styles.statValue}>{recipeData.servings}</Text>
+            <Text style={styles.statValue}>{recipe.servings}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statIcon}>🔥</Text>
             <Text style={styles.statLabel}>Calories</Text>
-            <Text style={styles.statValue}>{recipeData.calories}</Text>
+            <Text style={styles.statValue}>{recipe.calories}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statIcon}>⏱️</Text>
             <Text style={styles.statLabel}>Prep Time</Text>
-            <Text style={styles.statValue}>{recipeData.prepTime}</Text>
+            <Text style={styles.statValue}>{recipe.prepTime}</Text>
           </View>
         </View>
 
@@ -212,7 +271,7 @@ export default function RecipeDetailScreen() {
 
         {/* Recipe Description */}
         <View style={styles.descriptionContainer}>
-          <Text style={styles.descriptionText}>{recipeData.description}</Text>
+          <Text style={styles.descriptionText}>{recipe.description}</Text>
         </View>
 
         {/* Tabs */}

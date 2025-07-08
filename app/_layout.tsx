@@ -24,6 +24,8 @@ export default function RootLayout() {
         <Stack.Screen name="signup" options={{ headerShown: false }} />
         <Stack.Screen name="recipe-generator" options={{ headerShown: false }} />
         <Stack.Screen name="recipe-detail" options={{ headerShown: false }} />
+        <Stack.Screen name="liked-recipes" options={{ headerShown: false }} />
+        <Stack.Screen name="bookmarked-recipes" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

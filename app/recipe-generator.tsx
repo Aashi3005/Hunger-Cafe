@@ -1,17 +1,18 @@
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { generateRecipeWithAI } from '../services/aiService';
 import { signOutUser } from '../services/authService';
+import { RecipeStorage } from '../services/recipeStorage';
 
 export default function RecipeGeneratorScreen() {
   const [ingredients, setIngredients] = useState('');
@@ -20,6 +21,40 @@ export default function RecipeGeneratorScreen() {
   const [cookingTime, setCookingTime] = useState('');
   const [servings, setServings] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [likedCount, setLikedCount] = useState(0);
+  const [bookmarkedCount, setBookmarkedCount] = useState(0);
+
+  // Load recipe counts on component mount
+  useEffect(() => {
+    const loadRecipeCounts = async () => {
+      try {
+        const [likedRecipes, bookmarkedRecipes] = await Promise.all([
+          RecipeStorage.getLikedRecipes(),
+          RecipeStorage.getBookmarkedRecipes()
+        ]);
+        setLikedCount(likedRecipes.length);
+        setBookmarkedCount(bookmarkedRecipes.length);
+      } catch (error) {
+        console.error('Error loading recipe counts:', error);
+      }
+    };
+
+    loadRecipeCounts();
+  }, []);
+
+  // Refresh recipe counts (can be called when returning to this screen)
+  const refreshRecipeCounts = async () => {
+    try {
+      const [likedRecipes, bookmarkedRecipes] = await Promise.all([
+        RecipeStorage.getLikedRecipes(),
+        RecipeStorage.getBookmarkedRecipes()
+      ]);
+      setLikedCount(likedRecipes.length);
+      setBookmarkedCount(bookmarkedRecipes.length);
+    } catch (error) {
+      console.error('Error refreshing recipe counts:', error);
+    }
+  };
 
   const handleGenerateRecipe = async () => {
     if (!ingredients.trim()) {
@@ -198,6 +233,31 @@ export default function RecipeGeneratorScreen() {
             </TouchableOpacity>
           </View>
           <Text style={styles.subtitle}>AI Recipe Generator</Text>
+          
+          {/* Quick Access Navigation */}
+          <View style={styles.quickAccessContainer}>
+            <TouchableOpacity 
+              style={styles.quickAccessButton}
+              onPress={() => router.push('/liked-recipes')}
+            >
+              <Text style={styles.quickAccessIcon}>❤️</Text>
+              <View style={styles.quickAccessTextContainer}>
+                <Text style={styles.quickAccessText}>Liked Recipes</Text>
+                <Text style={styles.quickAccessCount}>{likedCount}</Text>
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickAccessButton}
+              onPress={() => router.push('/bookmarked-recipes')}
+            >
+              <Text style={styles.quickAccessIcon}>🔖</Text>
+              <View style={styles.quickAccessTextContainer}>
+                <Text style={styles.quickAccessText}>Bookmarked</Text>
+                <Text style={styles.quickAccessCount}>{bookmarkedCount}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Generate Recipe Form */}
@@ -405,6 +465,44 @@ const styles = StyleSheet.create({
     color: '#ED5565',
     marginTop: 5,
     fontWeight: '600',
+  },
+  quickAccessContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 15,
+  },
+  quickAccessButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  quickAccessIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  quickAccessTextContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  quickAccessText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  quickAccessCount: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#ED5565',
   },
   formContainer: {
     backgroundColor: '#FFFFFF',
