@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUser } from './authService';
 
+
 export interface Recipe {
   id: string;
   title: string;
@@ -33,11 +34,11 @@ export class RecipeStorage {
   private static async getUserSpecificKey(baseKey: string): Promise<string | null> {
     try {
       const currentUser = await getCurrentUser();
-      if (!currentUser || !currentUser.id) {
+      if (!currentUser || !currentUser.uid) {
         console.error('No current user found');
         return null;
       }
-      return `${baseKey}_${currentUser.id}`;
+      return `${baseKey}_${currentUser.uid}`;
     } catch (error) {
       console.error('Error getting user-specific key:', error);
       return null;
@@ -168,13 +169,13 @@ export class RecipeStorage {
   static async clearUserData(): Promise<void> {
     try {
       const currentUser = await getCurrentUser();
-      if (!currentUser || !currentUser.id) {
+      if (!currentUser || !currentUser.uid) {
         console.error('No current user found for clearing data');
         return;
       }
       
-      const likedKey = `likedRecipes_${currentUser.id}`;
-      const bookmarkedKey = `bookmarkedRecipes_${currentUser.id}`;
+      const likedKey = `likedRecipes_${currentUser.uid}`;
+      const bookmarkedKey = `bookmarkedRecipes_${currentUser.uid}`;
       
       await Promise.all([
         AsyncStorage.removeItem(likedKey),

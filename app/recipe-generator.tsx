@@ -13,6 +13,7 @@ import {
 import { generateRecipeWithAI } from '../services/aiService';
 import { signOutUser } from '../services/authService';
 import { RecipeStorage } from '../services/recipeStorage';
+import { speechToTextService } from '../services/speechToTextService';
 
 export default function RecipeGeneratorScreen() {
   const [ingredients, setIngredients] = useState('');
@@ -23,6 +24,10 @@ export default function RecipeGeneratorScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [likedCount, setLikedCount] = useState(0);
   const [bookmarkedCount, setBookmarkedCount] = useState(0);
+  // New states for speech-to-text
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [stopRecordingCallback, setStopRecordingCallback] = useState<(() => Promise<any>) | null>(null);
 
   // Load recipe counts function
   const loadRecipeCounts = useCallback(async () => {
@@ -61,6 +66,45 @@ export default function RecipeGeneratorScreen() {
       setBookmarkedCount(bookmarkedRecipes.length);
     } catch (error) {
       console.error('Error refreshing recipe counts:', error);
+    }
+  };
+
+  // Handle microphone button press
+  const handleMicPress = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      if (stopRecordingCallback) {
+        setIsTranscribing(true);
+        try {
+          const result = await stopRecordingCallback();
+          if (result.success && result.text) {
+            // Append the transcribed text to existing ingredients
+            const newIngredients = ingredients.trim() 
+              ? `${ingredients}, ${result.text}` 
+              : result.text;
+            setIngredients(newIngredients);
+          } else {
+            Alert.alert('Error', 'Could not transcribe audio. Please try again.');
+          }
+        } catch (error) {
+          console.error('Transcription error:', error);
+          Alert.alert('Error', 'Failed to transcribe audio. Please try again.');
+        } finally {
+          setIsTranscribing(false);
+          setIsRecording(false);
+          setStopRecordingCallback(null);
+        }
+      }
+    } else {
+      // Start recording
+      try {
+        const stopCallback = await speechToTextService.recordAndTranscribe();
+        setStopRecordingCallback(stopCallback);
+        setIsRecording(true);
+      } catch (error) {
+        console.error('Recording error:', error);
+        Alert.alert('Error', 'Failed to start recording. Please check microphone permissions.');
+      }
     }
   };
 
@@ -286,14 +330,29 @@ export default function RecipeGeneratorScreen() {
           </View>
 
           <Text style={styles.label}>Available Ingredients</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., chicken, tomatoes, garlic, onions..."
-            value={ingredients}
-            onChangeText={setIngredients}
-            multiline
-            placeholderTextColor="#999"
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, styles.inputWithMic]}
+              placeholder="e.g., chicken, tomatoes, garlic, onions..."
+              value={ingredients}
+              onChangeText={setIngredients}
+              multiline
+              placeholderTextColor="#999"
+            />
+            <TouchableOpacity
+              style={[
+                styles.micButton,
+                isRecording && styles.micButtonRecording,
+                isTranscribing && styles.micButtonTranscribing
+              ]}
+              onPress={handleMicPress}
+              disabled={isTranscribing}
+            >
+              <Text style={styles.micIcon}>
+                {isTranscribing ? '⏳' : isRecording ? '🔴' : '🎤'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.row}>
             <View style={styles.halfWidth}>
@@ -564,6 +623,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     color: '#333',
+  },
+  inputWithMic: {
+    paddingRight: 50, // Make space for mic button
+  },
+  inputContainer: {
+    position: 'relative',
+  },
+  micButton: {
+    position: 'absolute',
+    right: 10,
+    top: '50%',
+    transform: [{ translateY: -15 }],
+    backgroundColor: '#ED5565',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  micButtonRecording: {
+    backgroundColor: '#FF6B6B', // Redder when recording
+  },
+  micButtonTranscribing: {
+    backgroundColor: '#FFD700', // Yellow when transcribing
+  },
+  micIcon: {
+    fontSize: 20,
+    color: '#FFFFFF',
   },
   row: {
     flexDirection: 'row',

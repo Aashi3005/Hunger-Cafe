@@ -1,5 +1,5 @@
 import { Link, router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { getCurrentUser, signUpUser } from '../services/authService';
 
@@ -40,7 +40,7 @@ export default function SignupScreen() {
 
         setLoading(true);
         const result = await signUpUser(email, password);
-        setLoading(false);
+        
 
         if (result.success) {
             Alert.alert('Success', 'Account created successfully!', [
@@ -49,6 +49,7 @@ export default function SignupScreen() {
         } else {
             Alert.alert('Signup Failed', result.error);
         }
+        setLoading(false);
     };
 
     return (
