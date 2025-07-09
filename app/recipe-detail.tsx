@@ -84,8 +84,10 @@ export default function RecipeDetailScreen() {
       
       if (newLikedState) {
         await RecipeStorage.addLikedRecipe(recipe);
+        Alert.alert('Added to liked recipes', 'Recipe saved to your liked recipes ❤️');
       } else {
         await RecipeStorage.removeLikedRecipe(recipe.id);
+        Alert.alert('Removed from liked recipes', 'Recipe removed from your liked recipes 💔');
       }
     } catch (error) {
       console.error('Error updating like:', error);

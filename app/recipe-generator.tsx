@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   SafeAreaView,
@@ -24,23 +24,31 @@ export default function RecipeGeneratorScreen() {
   const [likedCount, setLikedCount] = useState(0);
   const [bookmarkedCount, setBookmarkedCount] = useState(0);
 
+  // Load recipe counts function
+  const loadRecipeCounts = useCallback(async () => {
+    try {
+      const [likedRecipes, bookmarkedRecipes] = await Promise.all([
+        RecipeStorage.getLikedRecipes(),
+        RecipeStorage.getBookmarkedRecipes()
+      ]);
+      setLikedCount(likedRecipes.length);
+      setBookmarkedCount(bookmarkedRecipes.length);
+    } catch (error) {
+      console.error('Error loading recipe counts:', error);
+    }
+  }, []);
+
   // Load recipe counts on component mount
   useEffect(() => {
-    const loadRecipeCounts = async () => {
-      try {
-        const [likedRecipes, bookmarkedRecipes] = await Promise.all([
-          RecipeStorage.getLikedRecipes(),
-          RecipeStorage.getBookmarkedRecipes()
-        ]);
-        setLikedCount(likedRecipes.length);
-        setBookmarkedCount(bookmarkedRecipes.length);
-      } catch (error) {
-        console.error('Error loading recipe counts:', error);
-      }
-    };
-
     loadRecipeCounts();
-  }, []);
+  }, [loadRecipeCounts]);
+
+  // Refresh counts when screen comes into focus (when returning from other screens)
+  useFocusEffect(
+    useCallback(() => {
+      loadRecipeCounts();
+    }, [loadRecipeCounts])
+  );
 
   // Refresh recipe counts (can be called when returning to this screen)
   const refreshRecipeCounts = async () => {
@@ -242,7 +250,10 @@ export default function RecipeGeneratorScreen() {
           <View style={styles.quickAccessContainer}>
             <TouchableOpacity 
               style={styles.quickAccessButton}
-              onPress={() => router.push('/liked-recipes')}
+              onPress={async () => {
+                await loadRecipeCounts(); // Refresh counts before navigation
+                router.push('/liked-recipes');
+              }}
             >
               <Text style={styles.quickAccessIcon}>❤️</Text>
               <View style={styles.quickAccessTextContainer}>
@@ -253,7 +264,10 @@ export default function RecipeGeneratorScreen() {
             
             <TouchableOpacity 
               style={styles.quickAccessButton}
-              onPress={() => router.push('/bookmarked-recipes')}
+              onPress={async () => {
+                await loadRecipeCounts(); // Refresh counts before navigation
+                router.push('/bookmarked-recipes');
+              }}
             >
               <Text style={styles.quickAccessIcon}>🔖</Text>
               <View style={styles.quickAccessTextContainer}>
