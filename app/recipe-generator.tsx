@@ -208,6 +208,10 @@ export default function RecipeGeneratorScreen() {
         {
           text: 'Logout',
           onPress: async () => {
+            // Reset counts before logout
+            setLikedCount(0);
+            setBookmarkedCount(0);
+            
             await signOutUser();
             router.replace('/');
           }
