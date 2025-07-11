@@ -46,6 +46,9 @@
         {
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone for speech-to-text functionality."
         }
+      ],
+      [
+        "@react-native-voice/voice"
       ]
     ],
     "experiments": {

@@ -86,7 +86,7 @@ export default function AuthScreen() {
 
                 {/* signup link */}
                 <View style={styles.signupContainer}>
-                    <Text style={styles.signupText}>Don't have an account?</Text>
+                    <Text style={styles.signupText}>Don&apos;t have an account?</Text>
                     <Link href="/signup" style={styles.signupLink}>
                         <Text style={styles.signupLinkText}>SignUp</Text>
                     </Link>
