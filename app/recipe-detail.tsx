@@ -1,7 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
+  Image,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -16,6 +18,8 @@ export default function RecipeDetailScreen() {
   const [activeTab, setActiveTab] = useState('ingredients');
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   // Parse the recipe data from params
   const recipeData = params.recipe ? JSON.parse(params.recipe as string) : null;
@@ -211,7 +215,28 @@ export default function RecipeDetailScreen() {
         {/* Recipe Image and Info */}
         <View style={styles.recipeImageContainer}>
           <View style={styles.recipeImage}>
-            <Text style={styles.recipeImagePlaceholder}>🍕</Text>
+            {recipe.imageUrl && !imageError ? (
+              <>
+                <Image
+                  source={{ uri: recipe.imageUrl }}
+                  style={styles.recipeImageStyle}
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => {
+                    setImageError(true);
+                    setImageLoading(false);
+                  }}
+                  resizeMode="cover"
+                />
+                {imageLoading && (
+                  <View style={styles.imageLoadingOverlay}>
+                    <ActivityIndicator size="large" color="#ED5565" />
+                    <Text style={styles.imageLoadingText}>Loading image...</Text>
+                  </View>
+                )}
+              </>
+            ) : (
+              <Text style={styles.recipeImagePlaceholder}>🍽️</Text>
+            )}
           </View>
           
           {/* Tags */}
@@ -386,6 +411,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
+    overflow: 'hidden',
+  },
+  recipeImageStyle: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+  },
+  imageLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(245, 245, 245, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  imageLoadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
   },
   recipeImagePlaceholder: {
     fontSize: 60,

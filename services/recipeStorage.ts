@@ -27,6 +27,7 @@ export interface Recipe {
   };
   tips: string[];
   description: string;
+  imageUrl?: string; // AI generated image URL
 }
 
 export class RecipeStorage {

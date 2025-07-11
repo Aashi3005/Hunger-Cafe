@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { debugAIService, generateMultipleRecipesWithAI, quickHealthCheck } from '../services/aiService';
+import { debugAIService, generateMultipleRecipesWithAI, quickHealthCheck, resetQuotaCounter } from '../services/aiService';
 import { signOutUser } from '../services/authService';
 import { RecipeStorage } from '../services/recipeStorage';
 import { voiceToTextService } from '../services/voiceToTextService';
@@ -69,12 +69,12 @@ export default function RecipeGeneratorScreen() {
       },
       onSpeechResult: (text: string) => {
         console.log('Speech result:', text);
-        // Append the recognized text to existing ingredients
+        // Just add the text, don't stop recording automatically
         const newIngredients = ingredients.trim() 
           ? `${ingredients}, ${text}` 
           : text;
         setIngredients(newIngredients);
-        setIsListening(false);
+        // Clear partial text but keep recording
         setPartialText('');
       },
       onSpeechError: (error: any) => {
@@ -106,30 +106,29 @@ export default function RecipeGeneratorScreen() {
   );
 
 
-  // Handle microphone button press
+  // Handle microphone button press - Classic toggle method
   const handleMicPress = async () => {
     try {
       if (isListening) {
-        // Stop listening
+        // Stop listening - user clicked to stop
+        console.log('User stopping voice recognition...');
         await voiceToTextService.stopListening();
-        setIsListening(false);
       } else {
-        // Configure voice recognition for better sentence capture
+        // Start listening - user clicked to start
+        console.log('User starting voice recognition...');
+        
+        // Configure voice recognition
         const voiceOptions = {
           locale: 'en-US',
-          // Additional options can be added here
         };
         
-        
-        // Start listening with improved configuration
+        // Start listening
         await voiceToTextService.startListening(voiceOptions);
-        setIsListening(true);
-        
-        console.log('Voice recognition started with enhanced settings');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Voice recognition error:', error);
       setIsListening(false);
+      setPartialText('');
       
       // Provide more specific error messages
       let errorMessage = 'Failed to use voice recognition. Please check microphone permissions.';
@@ -346,8 +345,15 @@ export default function RecipeGeneratorScreen() {
       let debugMessage = `Debug Report (${new Date().toLocaleTimeString()}):\n\n`;
       debugMessage += `🔑 API Key: ${debugResult.apiKeyStatus}\n`;
       debugMessage += `🌐 Network: ${debugResult.networkStatus}\n\n`;
-      debugMessage += `Model Status:\n`;
       
+      // Add quota information
+      if (debugResult.quotaStatus) {
+        debugMessage += `📊 Quota Status:\n`;
+        debugMessage += `• Requests used: ${debugResult.quotaStatus.requestCount}/${debugResult.quotaStatus.maxRequests}\n`;
+        debugMessage += `• Status: ${debugResult.quotaStatus.quotaExceeded ? 'EXCEEDED' : 'OK'}\n\n`;
+      }
+      
+      debugMessage += `🤖 Model Status:\n`;
       Object.entries(debugResult.modelAvailability).forEach(([model, info]: [string, any]) => {
         debugMessage += `• ${model}: ${info.status}`;
         if (info.responseTime) {
@@ -356,6 +362,14 @@ export default function RecipeGeneratorScreen() {
         debugMessage += '\n';
       });
       
+      // Add recommendations
+      if (debugResult.recommendations && debugResult.recommendations.length > 0) {
+        debugMessage += `\n💡 Recommendations:\n`;
+        debugResult.recommendations.forEach((rec: string) => {
+          debugMessage += `• ${rec}\n`;
+        });
+      }
+      
       Alert.alert('AI Service Debug Report', debugMessage);
     } catch (error: any) {
       console.error('Debug failed:', error);
@@ -363,6 +377,24 @@ export default function RecipeGeneratorScreen() {
     } finally {
       setIsDebugging(false);
     }
+  };
+
+  // Quota reset function
+  const handleQuotaReset = () => {
+    Alert.alert(
+      'Reset Quota Counter',
+      'This will reset the local quota counter. Use this if you want to try the AI service again after waiting for quota reset.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          onPress: () => {
+            resetQuotaCounter();
+            Alert.alert('Success', 'Quota counter has been reset. You can now try generating recipes again.');
+          }
+        }
+      ]
+    );
   };
 
   // Quick health check
@@ -601,7 +633,7 @@ export default function RecipeGeneratorScreen() {
         <View style={styles.debugContainer}>
           <Text style={styles.debugTitle}>🔧 Debug & Troubleshooting</Text>
           <Text style={styles.debugDescription}>
-            If recipes are taking too long to generate, use these tools to diagnose issues:
+            If recipes are taking too long to generate or showing quota errors, use these tools:
           </Text>
           
           <View style={styles.debugButtons}>
@@ -625,6 +657,16 @@ export default function RecipeGeneratorScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+          
+          <TouchableOpacity 
+            style={[styles.debugButton, styles.debugButtonReset]}
+            onPress={handleQuotaReset}
+            disabled={isDebugging || isGenerating}
+          >
+            <Text style={styles.debugButtonText}>
+              Reset Quota Counter
+            </Text>
+          </TouchableOpacity>
         </View>
 
 
@@ -1001,6 +1043,10 @@ const styles = StyleSheet.create({
   },
   debugButtonDetailed: {
     backgroundColor: '#4CAF50',
+  },
+  debugButtonReset: {
+    backgroundColor: '#FF9800',
+    marginTop: 10,
   },
   debugButtonDisabled: {
     backgroundColor: '#ccc',

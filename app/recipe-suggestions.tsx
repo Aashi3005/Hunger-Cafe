@@ -1,7 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
+    Image,
     SafeAreaView,
     ScrollView,
     StyleSheet,
@@ -12,6 +14,8 @@ import {
 
 export default function RecipeSuggestionsScreen() {
   const params = useLocalSearchParams();
+  const [imageLoadingStates, setImageLoadingStates] = useState<{[key: string]: boolean}>({});
+  const [imageErrorStates, setImageErrorStates] = useState<{[key: string]: boolean}>({});
   
   // Parse the recipes data from params
   let recipes = [];
@@ -50,6 +54,15 @@ export default function RecipeSuggestionsScreen() {
     }
   };
 
+  const handleImageLoad = (recipeId: string) => {
+    setImageLoadingStates(prev => ({ ...prev, [recipeId]: false }));
+  };
+
+  const handleImageError = (recipeId: string) => {
+    setImageErrorStates(prev => ({ ...prev, [recipeId]: true }));
+    setImageLoadingStates(prev => ({ ...prev, [recipeId]: false }));
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -67,86 +80,108 @@ export default function RecipeSuggestionsScreen() {
 
         {/* Recipe Cards */}
         <View style={styles.recipesContainer}>
-          {recipes.map((recipe, index) => (
+          {recipes.map((recipe: any, index: number) => (
             <TouchableOpacity
               key={recipe.id || index}
               style={styles.recipeCard}
               onPress={() => handleRecipeSelect(recipe)}
               activeOpacity={0.7}
             >
-              <View style={styles.recipeHeader}>
-                <View style={styles.recipeHeaderLeft}>
+              {/* Recipe Image */}
+              <View style={styles.recipeImageContainer}>
+                {recipe.imageUrl && !imageErrorStates[recipe.id] ? (
+                  <>
+                    <Image
+                      source={{ uri: recipe.imageUrl }}
+                      style={styles.recipeImage}
+                      onLoad={() => handleImageLoad(recipe.id)}
+                      onError={() => handleImageError(recipe.id)}
+                      resizeMode="cover"
+                    />
+                    {imageLoadingStates[recipe.id] !== false && (
+                      <View style={styles.imageLoadingOverlay}>
+                        <ActivityIndicator size="small" color="#ED5565" />
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <View style={styles.imagePlaceholder}>
+                    <Text style={styles.imagePlaceholderText}>🍽️</Text>
+                  </View>
+                )}
+                <View style={styles.ratingBadge}>
+                  <Text style={styles.ratingIcon}>⭐</Text>
+                  <Text style={styles.ratingText}>{recipe.rating}</Text>
+                </View>
+              </View>
+
+              <View style={styles.recipeContent}>
+                <View style={styles.recipeHeader}>
                   <Text style={styles.recipeTitle}>{recipe.recipeName || recipe.title}</Text>
                   <Text style={styles.recipeDescription}>{recipe.description}</Text>
                 </View>
-                <View style={styles.recipeHeaderRight}>
-                  <View style={styles.ratingContainer}>
-                    <Text style={styles.ratingIcon}>⭐</Text>
-                    <Text style={styles.ratingText}>{recipe.rating}</Text>
-                  </View>
-                </View>
-              </View>
 
-              <View style={styles.recipeInfo}>
-                <View style={styles.infoRow}>
-                  <View style={styles.infoItem}>
-                    <Text style={styles.infoIcon}>⏱️</Text>
-                    <Text style={styles.infoText}>{recipe.totalTime}</Text>
-                  </View>
-                  <View style={styles.infoItem}>
-                    <Text style={styles.infoIcon}>👥</Text>
-                    <Text style={styles.infoText}>{recipe.servings}</Text>
-                  </View>
-                  <View style={styles.infoItem}>
-                    <Text style={styles.infoIcon}>🔥</Text>
-                    <Text style={styles.infoText}>{recipe.calories} cal</Text>
-                  </View>
-                </View>
-                
-                <View style={styles.infoRow}>
-                  <View style={styles.infoItem}>
-                    <Text style={styles.infoIcon}>🌍</Text>
-                    <Text style={styles.infoText}>{recipe.cuisine}</Text>
-                  </View>
-                  <View style={styles.infoItem}>
-                    <Text style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor(recipe.difficulty) }]}>
-                      {recipe.difficulty}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Tags */}
-              {recipe.tags && recipe.tags.length > 0 && (
-                <View style={styles.tagsContainer}>
-                  {recipe.tags.slice(0, 3).map((tag, tagIndex) => (
-                    <View key={tagIndex} style={styles.tag}>
-                      <Text style={styles.tagText}>{tag}</Text>
+                <View style={styles.recipeInfo}>
+                  <View style={styles.infoRow}>
+                    <View style={styles.infoItem}>
+                      <Text style={styles.infoIcon}>⏱️</Text>
+                      <Text style={styles.infoText}>{recipe.totalTime}</Text>
                     </View>
-                  ))}
-                  {recipe.tags.length > 3 && (
-                    <Text style={styles.moreTagsText}>+{recipe.tags.length - 3} more</Text>
-                  )}
+                    <View style={styles.infoItem}>
+                      <Text style={styles.infoIcon}>👥</Text>
+                      <Text style={styles.infoText}>{recipe.servings}</Text>
+                    </View>
+                    <View style={styles.infoItem}>
+                      <Text style={styles.infoIcon}>🔥</Text>
+                      <Text style={styles.infoText}>{recipe.calories} cal</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.infoRow}>
+                    <View style={styles.infoItem}>
+                      <Text style={styles.infoIcon}>🌍</Text>
+                      <Text style={styles.infoText}>{recipe.cuisine}</Text>
+                    </View>
+                    <View style={styles.infoItem}>
+                      <Text style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor(recipe.difficulty) }]}>
+                        {recipe.difficulty}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-              )}
 
-              {/* Key Ingredients Preview */}
-              <View style={styles.ingredientsPreview}>
-                <Text style={styles.ingredientsTitle}>Key Ingredients:</Text>
-                <Text style={styles.ingredientsText}>
-                  {recipe.ingredients
-                    ?.filter(ing => ing.essential)
-                    .slice(0, 4)
-                    .map(ing => ing.name)
-                    .join(', ')
-                  }
-                  {recipe.ingredients?.filter(ing => ing.essential).length > 4 && '...'}
-                </Text>
-              </View>
+                {/* Tags */}
+                {recipe.tags && recipe.tags.length > 0 && (
+                  <View style={styles.tagsContainer}>
+                    {recipe.tags.slice(0, 3).map((tag: string, tagIndex: number) => (
+                      <View key={tagIndex} style={styles.tag}>
+                        <Text style={styles.tagText}>{tag}</Text>
+                      </View>
+                    ))}
+                    {recipe.tags.length > 3 && (
+                      <Text style={styles.moreTagsText}>+{recipe.tags.length - 3} more</Text>
+                    )}
+                  </View>
+                )}
 
-              {/* Call to Action */}
-              <View style={styles.ctaContainer}>
-                <Text style={styles.ctaText}>Tap to view full recipe →</Text>
+                {/* Key Ingredients Preview */}
+                <View style={styles.ingredientsPreview}>
+                  <Text style={styles.ingredientsTitle}>Key Ingredients:</Text>
+                  <Text style={styles.ingredientsText}>
+                    {recipe.ingredients
+                      ?.filter((ing: any) => ing.essential)
+                      .slice(0, 4)
+                      .map((ing: any) => ing.name)
+                      .join(', ')
+                    }
+                    {recipe.ingredients?.filter((ing: any) => ing.essential).length > 4 && '...'}
+                  </Text>
+                </View>
+
+                {/* Call to Action */}
+                <View style={styles.ctaContainer}>
+                  <Text style={styles.ctaText}>Tap to view full recipe →</Text>
+                </View>
               </View>
             </TouchableOpacity>
           ))}
@@ -191,6 +226,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  headerButtonText: {
+    fontSize: 20,
+    color: '#333',
+  },
   backButtonText: {
     fontSize: 16,
     color: '#ED5565',
@@ -220,7 +259,6 @@ const styles = StyleSheet.create({
   recipeCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 20,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
@@ -229,16 +267,61 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: '#F0F0F0',
+    overflow: 'hidden',
+  },
+  recipeImageContainer: {
+    height: 180,
+    position: 'relative',
+  },
+  recipeImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(245, 245, 245, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagePlaceholderText: {
+    fontSize: 40,
+  },
+  ratingBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  ratingIcon: {
+    fontSize: 12,
+    marginRight: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#F57C00',
+  },
+  recipeContent: {
+    padding: 20,
   },
   recipeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: 15,
-  },
-  recipeHeaderLeft: {
-    flex: 1,
-    marginRight: 15,
   },
   recipeTitle: {
     fontSize: 18,
@@ -250,26 +333,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
-  },
-  recipeHeaderRight: {
-    alignItems: 'center',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF8E1',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  ratingIcon: {
-    fontSize: 14,
-    marginRight: 4,
-  },
-  ratingText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#F57C00',
   },
   recipeInfo: {
     marginBottom: 15,
