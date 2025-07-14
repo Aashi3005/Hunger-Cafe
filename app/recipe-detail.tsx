@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
@@ -20,6 +21,9 @@ export default function RecipeDetailScreen() {
   const [isLiked, setIsLiked] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [shareEmailModalVisible, setShareEmailModalVisible] = useState(false);
+  const [shareRecipientEmail, setShareRecipientEmail] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   // Parse the recipe data from params
   const recipeData = params.recipe ? JSON.parse(params.recipe as string) : null;
@@ -100,9 +104,32 @@ export default function RecipeDetailScreen() {
     }
   };
 
-  const handleShare = () => {
-    Alert.alert('Share Recipe', 'Recipe shared successfully!');
+  const actuallyShareRecipe = async (to: string) => {
+    if (!recipe || isSending) return;
+    setIsSending(true);
+    try {
+      // Use your actual backend URL here
+      const response = await fetch('http://localhost:3001/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipe, toEmail: to }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        Alert.alert('Success', 'Recipe sent via email!');
+        setShareEmailModalVisible(false); // close modal
+      } else {
+        Alert.alert('Error', result.message || 'Failed to send email.');
+        console.log('Backend error:', result.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to send email.');
+      console.log('Email send error:', error);
+    } finally {
+      setIsSending(false);
+    }
   };
+  
 
   const handleFollow = () => {
     Alert.alert('Follow Chef', 'You are now following Chef Maria!');
@@ -197,7 +224,7 @@ export default function RecipeDetailScreen() {
                 {isLiked ? '❤️' : '♡'}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleShare} style={styles.headerButton}>
+            <TouchableOpacity onPress={() => setShareEmailModalVisible(true)} style={styles.headerButton}>
               <Text style={styles.headerButtonText}>↗</Text>
             </TouchableOpacity>
             <TouchableOpacity 
@@ -340,6 +367,44 @@ export default function RecipeDetailScreen() {
         {/* Tab Content */}
         {renderTabContent()}
       </ScrollView>
+
+      {/* Share Email Modal */}
+      {shareEmailModalVisible && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
+          <View style={{ backgroundColor: 'white', padding: 24, borderRadius: 12, width: '80%' }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Share via Email</Text>
+            <Text style={{ marginBottom: 8 }}>Enter recipient's email address:</Text>
+            <TextInput
+              value={shareRecipientEmail}
+              onChangeText={setShareRecipientEmail}
+              placeholder="Recipient Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!isSending}
+              style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 6, padding: 8, marginBottom: 16 }}
+            />
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+              <TouchableOpacity onPress={() => !isSending && setShareEmailModalVisible(false)} style={{ marginRight: 16 }} disabled={isSending}>
+                <Text style={{ color: '#ED5565', fontWeight: 'bold', opacity: isSending ? 0.5 : 1 }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={isSending}
+                onPress={async () => {
+                  if (isSending) return;
+                  if (shareRecipientEmail.trim()) {
+                    await actuallyShareRecipe(shareRecipientEmail.trim());
+                    setShareRecipientEmail('');
+                  } else {
+                    Alert.alert('Input Required', 'Please enter a recipient email.');
+                  }
+                }}
+              >
+                <Text style={{ color: '#4CAF50', fontWeight: 'bold', opacity: isSending ? 0.5 : 1 }}>{isSending ? 'Sending...' : 'Send'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
