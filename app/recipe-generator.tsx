@@ -31,6 +31,9 @@ export default function RecipeGeneratorScreen() {
   // Add debug state
   const [isDebugging, setIsDebugging] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  
+  // Cafe mode popup state
+  const [showCafeModePopup, setShowCafeModePopup] = useState(false);
 
   // Loading progress state
   const [loadingProgress, setLoadingProgress] = useState('');
@@ -419,18 +422,63 @@ export default function RecipeGeneratorScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Cafe Mode Popup - Outside ScrollView for proper centering */}
+      {showCafeModePopup && (
+        <View style={styles.popupOverlay}>
+          <TouchableOpacity 
+            activeOpacity={1}
+            onPress={() => setShowCafeModePopup(false)}
+          >
+            <View style={styles.popupContainer}>
+              <TouchableOpacity 
+                activeOpacity={1}
+                onPress={() => {}} // Prevent closing when clicking inside popup
+              >
+                <View style={styles.popupHeader}>
+                  <View style={styles.popupIconContainer}>
+                    <Text style={styles.popupIcon}>🏪</Text>
+                  </View>
+                  <Text style={styles.popupTitle}>Switch to Cafe Mode</Text>
+                  <Text style={styles.popupSubtitle}>Start managing your cafe delivery app</Text>
+                </View>
+                
+                <View style={styles.popupActions}>
+                  <TouchableOpacity 
+                    style={styles.popupButton}
+                    onPress={() => {
+                      setShowCafeModePopup(false);
+                      // Here you can add navigation to cafe mode
+                      Alert.alert('Cafe Mode', 'Switching to cafe delivery mode...');
+                    }}
+                  >
+                    <Text style={styles.popupButtonText}>Switch to Cafe Mode</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.popupCancelButton}
+                    onPress={() => setShowCafeModePopup(false)}
+                  >
+                    <Text style={styles.popupCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.logoContainer}>
-              <View style={styles.iconPlaceholder}>
+              <TouchableOpacity onPress={() => router.push('/profile')} style={styles.iconPlaceholder}>
                 <Text style={styles.iconText}>🍳</Text>
-              </View>
+              </TouchableOpacity>
               <Text style={styles.appTitle}>HungerQuest</Text>
             </View>
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-              <Text style={styles.logoutText}>Logout</Text>
+            <TouchableOpacity onPress={() => setShowCafeModePopup(true)} style={styles.cafeModeButton}>
+              <Text style={styles.cafeModeIcon}>⚡</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.subtitle}>AI Recipe Generator</Text>
@@ -734,15 +782,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ED5565',
   },
-  logoutButton: {
+  cafeModeButton: {
     backgroundColor: '#ED5565',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
-  logoutText: {
+  cafeModeIcon: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   subtitle: {
@@ -1074,5 +1122,90 @@ const styles = StyleSheet.create({
   loadingSubText: {
     fontSize: 12,
     color: '#666',
+  },
+  
+  // Cafe Mode Popup Styles
+  popupOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 1000,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 80, // Adjust to center above the form
+  },
+  popupContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    margin: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+    maxWidth: 320,
+    width: '100%',
+  },
+  popupHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  popupIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FF9800',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  popupIcon: {
+    fontSize: 40,
+  },
+  popupTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  popupSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  popupActions: {
+    gap: 12,
+  },
+  popupButton: {
+    backgroundColor: '#ED5565',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  popupButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  popupCancelButton: {
+    backgroundColor: '#F0F0F0',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  popupCancelText: {
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '600',
   },
 }); 
