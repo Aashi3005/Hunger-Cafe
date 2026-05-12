@@ -1,0 +1,68 @@
+{
+    "categories": [
+      {
+        "id": "beverages",
+        "name": "Beverages",
+        "items": [
+          {"id": "bev1", "name": "Filter Coffee", "image": "☕", "isVeg": true, "rating": "4.2 (1.8K+)", "originalPrice": "₹45", "discountedPrice": "₹39"},
+          {"id": "bev2", "name": "Cappuccino", "image": "☕", "isVeg": true, "rating": "4.4 (2.1K+)", "originalPrice": "₹65", "discountedPrice": "₹59"},
+          {"id": "bev3", "name": "Cold Coffee", "image": "🧊", "isVeg": true, "rating": "4.3 (1.9K+)", "originalPrice": "₹55", "discountedPrice": "₹49"},
+          {"id": "bev4", "name": "Hot Chocolate", "image": "🍫", "isVeg": true, "rating": "4.1 (1.2K+)", "originalPrice": "₹75", "discountedPrice": "₹69"},
+          {"id": "bev5", "name": "Adrak Chai", "image": "🫖", "isVeg": true, "rating": "4.5 (2.5K+)", "originalPrice": "₹35", "discountedPrice": "₹29"},
+          {"id": "bev6", "name": "Iced Tea", "image": "🧊", "isVeg": true, "rating": "4.0 (1.1K+)", "originalPrice": "₹40", "discountedPrice": "₹35"}
+        ]
+      },
+      {
+        "id": "quick-snacks",
+        "name": "Quick Snacks",
+        "items": [
+          {"id": "snk1", "name": "Mini Peri Peri Samosa", "image": "🥟", "isVeg": true, "rating": "4.3 (2.3K+)", "originalPrice": "₹79", "discountedPrice": "₹71"},
+          {"id": "snk2", "name": "Veg Puff", "image": "🥐", "isVeg": true, "rating": "4.1 (2.4K+)", "originalPrice": "₹69", "discountedPrice": "₹59"},
+          {"id": "snk3", "name": "Bhelpuri", "image": "🥗", "isVeg": true, "rating": "4.3 (1.3K+)", "originalPrice": "₹99", "discountedPrice": "₹89"},
+          {"id": "snk4", "name": "Egg Puff", "image": "🥐", "isVeg": false, "rating": "4.2 (1.8K+)", "originalPrice": "₹75", "discountedPrice": "₹65"},
+          {"id": "snk5", "name": "Veg Roll", "image": "🌯", "isVeg": true, "rating": "4.0 (1.5K+)", "originalPrice": "₹85", "discountedPrice": "₹75"},
+          {"id": "snk6", "name": "Grilled Sandwich", "image": "🥪", "isVeg": false, "rating": "4.4 (2.0K+)", "originalPrice": "₹95", "discountedPrice": "₹85"}
+        ]
+      },
+      {
+        "id": "hearty-bowls",
+        "name": "Hearty Bowls",
+        "items": [
+          {"id": "hb1", "name": "Veg Rice Bowl", "image": "🍚", "isVeg": true, "rating": "4.2 (1.6K+)", "originalPrice": "₹120", "discountedPrice": "₹109"},
+          {"id": "hb2", "name": "Chicken Pasta Bowl", "image": "🍝", "isVeg": false, "rating": "4.5 (2.2K+)", "originalPrice": "₹150", "discountedPrice": "₹135"},
+          {"id": "hb3", "name": "Falafel Pita Bowl", "image": "🥙", "isVeg": true, "rating": "4.3 (1.4K+)", "originalPrice": "₹130", "discountedPrice": "₹119"}
+        ]
+      },
+      {
+        "id": "home-style",
+        "name": "Home Style Meals",
+        "items": [
+          {"id": "hm1", "name": "Lunch Thali", "image": "🍽️", "isVeg": true, "rating": "4.4 (2.8K+)", "originalPrice": "₹180", "discountedPrice": "₹165"},
+          {"id": "hm2", "name": "Tiffin Box (Veg)", "image": "🍱", "isVeg": true, "rating": "4.2 (1.9K+)", "originalPrice": "₹140", "discountedPrice": "₹129"},
+          {"id": "hm3", "name": "Soup (Chicken)", "image": "🍲", "isVeg": false, "rating": "4.1 (1.3K+)", "originalPrice": "₹90", "discountedPrice": "₹79"},
+          {"id": "hm4", "name": "Soup (Veg)", "image": "🍲", "isVeg": true, "rating": "4.0 (1.1K+)", "originalPrice": "₹80", "discountedPrice": "₹69"}
+        ]
+      },
+      {
+        "id": "healthy-choices",
+        "name": "Healthy Choices",
+        "items": [
+          {"id": "hc1", "name": "Protein Shake", "image": "🥤", "isVeg": true, "rating": "4.3 (1.7K+)", "originalPrice": "₹110", "discountedPrice": "₹99"},
+          {"id": "hc2", "name": "Protein Bar", "image": "🍫", "isVeg": true, "rating": "4.1 (1.2K+)", "originalPrice": "₹85", "discountedPrice": "₹75"},
+          {"id": "hc3", "name": "Salad Bowl", "image": "🥗", "isVeg": true, "rating": "4.2 (1.8K+)", "originalPrice": "₹95", "discountedPrice": "₹85"},
+          {"id": "hc4", "name": "Fresh Juice", "image": "🧃", "isVeg": true, "rating": "4.4 (2.0K+)", "originalPrice": "₹65", "discountedPrice": "₹59"}
+        ]
+      },
+      {
+        "id": "extras",
+        "name": "Extras",
+        "items": [
+          {"id": "ext1", "name": "Eggs (Boiled)", "image": "🥚", "isVeg": false, "rating": "4.0 (1.0K+)", "originalPrice": "₹40", "discountedPrice": "₹35"},
+          {"id": "ext2", "name": "Nuggets", "image": "🍗", "isVeg": false, "rating": "4.2 (1.5K+)", "originalPrice": "₹120", "discountedPrice": "₹109"},
+          {"id": "ext3", "name": "Veg Momos", "image": "🥟", "isVeg": true, "rating": "4.5 (2.6K+)", "originalPrice": "₹80", "discountedPrice": "₹71"},
+          {"id": "ext4", "name": "Naan & Subji", "image": "🍞", "isVeg": true, "rating": "4.3 (1.9K+)", "originalPrice": "₹100", "discountedPrice": "₹89"}
+        ]
+      }
+    ]
+  }
+  

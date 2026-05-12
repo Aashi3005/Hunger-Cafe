@@ -1,4 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
+import LottieView from 'lottie-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
@@ -436,9 +437,14 @@ export default function RecipeGeneratorScreen() {
               >
                 <View style={styles.popupHeader}>
                   <View style={styles.popupIconContainer}>
-                    <Text style={styles.popupIcon}>🏪</Text>
+                    <LottieView 
+                      source={require('../assets/animations/Delivery-riding.json')}
+                      autoPlay
+                      loop
+                      style={{ width:140, height:140 }}
+                    />
                   </View>
-                  <Text style={styles.popupTitle}>Switch to Cafe Mode</Text>
+                  <Text style={styles.popupTitle} >Switch to Cafe Mode</Text>
                   <Text style={styles.popupSubtitle}>Start managing your cafe delivery app</Text>
                 </View>
                 
@@ -446,9 +452,8 @@ export default function RecipeGeneratorScreen() {
                   <TouchableOpacity 
                     style={styles.popupButton}
                     onPress={() => {
+                      router.push('/cafe-loading');
                       setShowCafeModePopup(false);
-                      // Here you can add navigation to cafe mode
-                      Alert.alert('Cafe Mode', 'Switching to cafe delivery mode...');
                     }}
                   >
                     <Text style={styles.popupButtonText}>Switch to Cafe Mode</Text>
@@ -1158,7 +1163,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#FF9800',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,

@@ -28,6 +28,9 @@ export default function RootLayout() {
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="liked-recipes" options={{ headerShown: false }} />
         <Stack.Screen name="bookmarked-recipes" options={{ headerShown: false }} />
+        <Stack.Screen name="cafe-loading" options={{ headerShown: false }} />
+        <Stack.Screen name="snacc-screen" options={{ headerShown: false }} />
+        <Stack.Screen name="menu-screen" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

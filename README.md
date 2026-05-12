@@ -25,6 +25,10 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+### Lottie animation setup
+
+Save your animation JSON to `assets/animations/food-squeeze-burger-hotdog.json` and it will be used on the `app/cafe-loading.tsx` screen. You can download the JSON from your Lottie asset page and place it there, or update the import path in that screen if you use a different filename.
+
 ## Get a fresh project
 
 When you're ready, run:
