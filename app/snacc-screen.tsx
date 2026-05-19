@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -28,7 +28,7 @@ interface FoodItem {
 }
 
 export default function SnaccScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
   const [isVegToggle, setIsVegToggle] = useState(false);
   const [showVegLoading, setShowVegLoading] = useState(false);
   const [filteredFoodItems, setFilteredFoodItems] = useState<FoodItem[]>([]);
@@ -60,9 +60,12 @@ export default function SnaccScreen() {
 
   const handleCategoryPress = (categoryName: string) => {
     // Navigate to MenuScreen with category information
-    (navigation as any).navigate('menu-screen', {
-      categoryName: categoryName,
-      categoryId: categoryName.toLowerCase().replace(/\s+/g, '-')
+    router.push({
+      pathname: '/menu-screen',
+      params: {
+        categoryName: categoryName,
+        categoryId: categoryName.toLowerCase().replace(/\s+/g, '-')
+      }
     });
   };
 

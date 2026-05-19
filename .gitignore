@@ -43,3 +43,8 @@ expo-modules-autolinking/
 
 # API Configuration - Keep your API keys secure!
 config/apiConfig.js
+
+# Vercel API subfolder
+vercel-api/node_modules/
+vercel-api/.next/
+vercel-api/.env*.local
