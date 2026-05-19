@@ -1,4 +1,4 @@
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -32,9 +32,8 @@ interface Category {
 }
 
 export default function MenuScreen() {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { categoryName, categoryId } = route.params as { categoryName: string; categoryId: string };
+  const router = useRouter();
+  const { categoryName, categoryId } = useLocalSearchParams<{ categoryName: string; categoryId: string }>();
   
   const [categoryData, setCategoryData] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,7 +69,7 @@ export default function MenuScreen() {
   };
 
   const handleBackPress = () => {
-    navigation.goBack();
+    router.back();
   };
 
   const renderMenuItem = (item: MenuItem) => (
